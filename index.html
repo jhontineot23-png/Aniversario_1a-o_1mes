@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Ti, Mi Amor - 1 Año y 1 Mes</title>
+    <!-- Importamos fuentes elegantes -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #ffffff;
+            --glass-bg: rgba(20, 0, 30, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #020005;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-color);
+        }
+
+        /* Contenedor del Canvas 3D */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI Overlay */
+        #ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header-content {
+            margin-top: 2vh;
+            text-align: center;
+            pointer-events: none;
+            animation: fadeInDown 2s ease-out;
+        }
+
+        .title-glow {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.5rem;
+            margin: 0;
+            color: #fff;
+            text-shadow: 
+                0 0 10px #fff,
+                0 0 20px #ff00cc, 
+                0 0 40px #bd00ff;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            color: #e0e0e0;
+            margin-top: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Selector de Color */
+        .color-palette {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 50px;
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+            pointer-events: auto;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .color-palette:hover {
+            transform: scale(1.05);
+        }
+
+        .color-btn {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .color-btn.active {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px currentColor;
+            border-color: #fff;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            pointer-events: auto;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: rgba(30, 10, 40, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 5px;
+            max-width: 90%;
+            width: 450px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 50px rgba(189, 0, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            max-height: 80vh; /* Aumentado un poco para aprovechar espacio */
+            object-fit: contain; /* CAMBIO CLAVE: 'contain' muestra la imagen completa */
+            border-radius: 12px;
+            display: none;
+            background-color: transparent;
+        }
+
+        .modal-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.2rem;
+            color: #fff;
+            margin: 40px 20px;
+            display: none;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+            z-index: 25;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 0, 0, 0.6);
+        }
+
+        .instruction {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+            z-index: 5;
+            pointer-events: none;
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        @media (max-width: 768px) {
+            .title-glow { font-size: 2.2rem; }
+            .subtitle { font-size: 0.8rem; letter-spacing: 1.5px; }
+            .color-palette { bottom: 1rem; right: 1rem; padding: 10px; gap: 10px; }
+            .modal-content { width: 95%; }
+            .modal-text { font-size: 1.8rem; margin: 30px 15px; }
+        }
+    </style>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div class="instruction">Toca las estrellas para descubrir nuestros recuerdos</div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-layer">
+        <div class="header-content">
+            <h1 class="title-glow">FELIZ 1 AÑO Y 1 MES MI AMOR</h1>
+            <p class="subtitle">Un universo de recuerdos en cada estrella</p>
+        </div>
+    </div>
+
+    <div class="color-palette">
+        <div class="color-btn active" style="background-color: #bd00ff;" data-color="purple" title="Morado/Rosa"></div>
+        <div class="color-btn" style="background-color: #ffffff;" data-color="white" title="Blanco"></div>
+        <div class="color-btn" style="background-color: #0091ff;" data-color="cyan" title="Celeste"></div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="close-modal">&times;</button>
+            <img src="" alt="Foto especial" class="modal-image" id="modal-img">
+            <div class="modal-text" id="modal-msg"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Configuración ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color('#020005');
+        scene.fog = new THREE.FogExp2(0x020005, 0.035);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 5, 8);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.8;
+        controls.maxDistance = 15;
+        controls.minDistance = 3;
+
+        // --- Generador de Texturas (Para dar forma a los puntos) ---
+        function createStarTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const cx = 32, cy = 32, spikes = 5, outerRadius = 30, innerRadius = 12;
+            
+            ctx.beginPath();
+            ctx.fillStyle = '#FFFFFF';
+            for(let i=0; i<spikes*2; i++){
+                const r = (i%2 === 0) ? outerRadius : innerRadius;
+                const angle = (Math.PI / spikes) * i;
+                const x = cx + Math.cos(angle) * r;
+                const y = cy + Math.sin(angle) * r;
+                if(i===0) ctx.moveTo(x,y);
+                else ctx.lineTo(x,y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            // Añadir un poco de blur/glow
+            ctx.shadowColor = "white";
+            ctx.shadowBlur = 10;
+            ctx.stroke();
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createCircleTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32; canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            
+            const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(0.4, 'rgba(255,255,255,0.5)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            
+            ctx.fillStyle = grad;
+            ctx.fillRect(0,0,32,32);
+            
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const starTexture = createStarTexture();
+        const circleTexture = createCircleTexture();
+
+        // --- Datos ---
+        const starData = [
+            // FOTOS REALES (Originales)
+            { type: 'image', content: 'Fotos/img1.jpeg', label: 'Momento especial 1' },
+            { type: 'image', content: 'Fotos/img2.jpeg', label: 'Momento especial 2' },
+            { type: 'image', content: 'Fotos/img3.jpeg', label: 'Momento especial 3' },
+            { type: 'image', content: 'Fotos/img4.jpeg', label: 'Momento especial 4' },
+            { type: 'image', content: 'Fotos/img5.jpeg', label: 'Momento especial 5' },
+            { type: 'image', content: 'Fotos/img6.jpeg', label: 'Momento especial 6' },
+            { type: 'image', content: 'Fotos/img7.jpeg', label: 'Momento especial 7' },
+            { type: 'image', content: 'Fotos/img8.jpeg', label: 'Momento especial 8' },
+            { type: 'image', content: 'Fotos/img9.jpeg', label: 'Momento especial 9' },
+            { type: 'image', content: 'Fotos/img10.jpeg', label: 'Momento especial 10' },
+            { type: 'image', content: 'Fotos/img11.jpeg', label: 'Momento especial 11' },
+            { type: 'image', content: 'Fotos/img12.jpeg', label: 'Momento especial 12' },
+            { type: 'image', content: 'Fotos/img13.jpeg', label: 'Momento especial 13' },
+            { type: 'image', content: 'Fotos/img14.jpeg', label: 'Momento especial 14' },
+            { type: 'image', content: 'Fotos/img15.jpeg', label: 'Momento especial 15' },
+            
+            // MENSAJES
+            { type: 'text', content: 'Deseo cada dia ser un mejor hombre para ti 🫶🏽', label: '' },
+            { type: 'text', content: 'Por miles de bellos momentos más a tu lado 💌', label: '' },
+            { type: 'text', content: 'Deseo seguir cumpliendo cada meta contigo 💗💫', label: '' },
+            { type: 'text', content: 'Gracias por seguir aún cuando no es fácil 🫂❤️‍🩹', label: '' },
+            { type: 'text', content: 'Gracias por amarme tan maravillosamente ✨', label: '' },
+            { type: 'text', content: 'Así de inmenso es mi amor por ti 🌌', label: '' },
+            { type: 'text', content: 'Para que cada día llenemos más estrellas de recuerdos 🌟', label: '' },
+            { type: 'text', content: 'Te amo mi Eli 💓', label: '' },
+            { type: 'text', content: 'Te amo mi niña consentida ♡', label: '' },
+            { type: 'text', content: 'Por muchos años más 💞', label: '' },
+            { type: 'text', content: 'Para que el próximo año sea de viaje juntos ❣️', label: '' }
+        ];
+
+        // --- Creación Galaxia Fondo ---
+        const galaxyGeometry = new THREE.BufferGeometry();
+        const galaxyCount = 20000;
+        const positions = new Float32Array(galaxyCount * 3);
+        const colors = new Float32Array(galaxyCount * 3);
+        
+        const colorInside = new THREE.Color('#ffaa88');
+        const colorOutside = new THREE.Color('#bd00ff');
+
+        const branches = 3;
+        const spin = 1;
+        const randomness = 0.2;
+        const radius = 6;
+
+        for(let i = 0; i < galaxyCount; i++) {
+            const i3 = i * 3;
+            const r = Math.random() * radius;
+            const spinAngle = r * spin;
+            const branchAngle = (i % branches) / branches * Math.PI * 2;
+
+            const randomX = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * randomness * r;
+            const randomY = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * randomness * r * 0.5;
+            const randomZ = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * randomness * r;
+
+            positions[i3] = Math.cos(branchAngle + spinAngle) * r + randomX;
+            positions[i3 + 1] = randomY;
+            positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * r + randomZ;
+
+            const mixedColor = colorInside.clone();
+            mixedColor.lerp(colorOutside, r / radius);
+            if (r < 1) mixedColor.lerp(new THREE.Color(0xffffff), 1 - r);
+            
+            colors[i3] = mixedColor.r;
+            colors[i3 + 1] = mixedColor.g;
+            colors[i3 + 2] = mixedColor.b;
+        }
+
+        galaxyGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        galaxyGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const galaxyMaterial = new THREE.PointsMaterial({
+            size: 0.025,
+            sizeAttenuation: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            vertexColors: true
+        });
+
+        const galaxy = new THREE.Points(galaxyGeometry, galaxyMaterial);
+        scene.add(galaxy);
+
+        // --- Creación de Estrellas Interactivas (Separadas por Textura) ---
+
+        // Separar datos
+        const imageItems = starData.filter(item => item.type === 'image');
+        const messageItems = starData.filter(item => item.type === 'text');
+
+        // 1. Sistema para Imágenes (Forma de Estrella)
+        const imgPointsGeometry = new THREE.BufferGeometry();
+        const imgPositions = new Float32Array(imageItems.length * 3);
+        const imgColors = new Float32Array(imageItems.length * 3);
+
+        imageItems.forEach((item, i) => {
+            const i3 = i * 3;
+            const r = 1.5 + Math.random() * (radius - 1);
+            const spinAngle = r * spin;
+            const branchAngle = (i % branches) / branches * Math.PI * 2 + (Math.random() * 0.8);
+
+            imgPositions[i3] = Math.cos(branchAngle + spinAngle) * r;
+            imgPositions[i3 + 1] = (Math.random() - 0.5) * 0.4;
+            imgPositions[i3 + 2] = Math.sin(branchAngle + spinAngle) * r;
+
+            // Color inicial dorado/amarillo para resaltar
+            imgColors[i3] = 1.0; 
+            imgColors[i3+1] = 0.8;
+            imgColors[i3+2] = 0.2;
+        });
+
+        imgPointsGeometry.setAttribute('position', new THREE.BufferAttribute(imgPositions, 3));
+        imgPointsGeometry.setAttribute('color', new THREE.BufferAttribute(imgColors, 3));
+
+        const imgPointsMaterial = new THREE.PointsMaterial({
+            size: 0.4, // Más grandes para que se vea la forma
+            map: starTexture, // Aquí está la forma estrellada
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            vertexColors: true,
+            sizeAttenuation: true
+        });
+
+        const imgPoints = new THREE.Points(imgPointsGeometry, imgPointsMaterial);
+        scene.add(imgPoints);
+
+        // 2. Sistema para Mensajes (Forma de Punto/Círculo)
+        const msgPointsGeometry = new THREE.BufferGeometry();
+        const msgPositions = new Float32Array(messageItems.length * 3);
+        const msgColors = new Float32Array(messageItems.length * 3);
+
+        messageItems.forEach((item, i) => {
+            const i3 = i * 3;
+            const r = 1.5 + Math.random() * (radius - 1);
+            const spinAngle = r * spin;
+            const branchAngle = (i % branches) / branches * Math.PI * 2 + (Math.random() * 0.8);
+
+            msgPositions[i3] = Math.cos(branchAngle + spinAngle) * r;
+            msgPositions[i3 + 1] = (Math.random() - 0.5) * 0.4;
+            msgPositions[i3 + 2] = Math.sin(branchAngle + spinAngle) * r;
+
+            msgColors[i3] = 1.0; 
+            msgColors[i3+1] = 1.0;
+            msgColors[i3+2] = 1.0;
+        });
+
+        msgPointsGeometry.setAttribute('position', new THREE.BufferAttribute(msgPositions, 3));
+        msgPointsGeometry.setAttribute('color', new THREE.BufferAttribute(msgColors, 3));
+
+        const msgPointsMaterial = new THREE.PointsMaterial({
+            size: 0.2, 
+            map: circleTexture, // Aquí está la forma de círculo suave
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            vertexColors: true,
+            sizeAttenuation: true
+        });
+
+        const msgPoints = new THREE.Points(msgPointsGeometry, msgPointsMaterial);
+        scene.add(msgPoints);
+
+        // --- Raycaster ---
+        const raycaster = new THREE.Raycaster();
+        raycaster.params.Points.threshold = 0.4; // Área de click generosa
+        const mouse = new THREE.Vector2();
+
+        window.addEventListener('click', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+
+            // Chequear intersección con AMBOS sistemas
+            const intersectsImg = raycaster.intersectObject(imgPoints);
+            const intersectsMsg = raycaster.intersectObject(msgPoints);
+
+            let dataToShow = null;
+
+            if (intersectsImg.length > 0) {
+                const index = intersectsImg[0].index;
+                dataToShow = imageItems[index];
+            } else if (intersectsMsg.length > 0) {
+                const index = intersectsMsg[0].index;
+                dataToShow = messageItems[index];
+            }
+
+            if (dataToShow) {
+                controls.autoRotate = false;
+                showModal(dataToShow);
+            }
+        });
+
+        // --- Modal UI ---
+        const modal = document.getElementById('modal');
+        const modalImg = document.getElementById('modal-img');
+        const modalMsg = document.getElementById('modal-msg');
+        const closeBtn = document.getElementById('close-modal');
+
+        function showModal(data) {
+            modal.classList.add('active');
+            if (data.type === 'image') {
+                modalImg.src = data.content;
+                modalImg.style.display = 'block';
+                modalMsg.style.display = 'none';
+            } else {
+                modalMsg.textContent = data.content;
+                modalMsg.style.display = 'block';
+                modalImg.style.display = 'none';
+            }
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            controls.autoRotate = true;
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // --- Colores ---
+        const colorBtns = document.querySelectorAll('.color-btn');
+        
+        const themes = {
+            purple: { 
+                starColor: new THREE.Color(0xffd700), // Dorado para imágenes
+                msgColor: new THREE.Color(0xffffff),  // Blanco para mensajes
+                galaxyIn: new THREE.Color('#ffaa88'),
+                galaxyOut: new THREE.Color('#bd00ff'),
+                bg: 0x020005
+            },
+            white: { 
+                starColor: new THREE.Color(0xffffff),
+                msgColor: new THREE.Color(0xffffff),
+                galaxyIn: new THREE.Color(0xffffee),
+                galaxyOut: new THREE.Color(0xaaaaff),
+                bg: 0x000510
+            },
+            cyan: { 
+                starColor: new THREE.Color(0x00f2ff),
+                msgColor: new THREE.Color(0x00f2ff),
+                galaxyIn: new THREE.Color(0xffffff),
+                galaxyOut: new THREE.Color(0x0088ff),
+                bg: 0x000515
+            }
+        };
+
+        function updateGalaxyColors(theme) {
+            // Galaxia Fondo
+            const colorsAttr = galaxy.geometry.attributes.color;
+            const positionsAttr = galaxy.geometry.attributes.position;
+            for(let i = 0; i < galaxyCount; i++) {
+                const x = positionsAttr.getX(i);
+                const y = positionsAttr.getY(i);
+                const z = positionsAttr.getZ(i);
+                const r = Math.sqrt(x*x + y*y + z*z);
+                const normalizedR = Math.min(r / radius, 1);
+
+                const mixedColor = theme.galaxyIn.clone();
+                mixedColor.lerp(theme.galaxyOut, normalizedR);
+                if (r < 1) mixedColor.lerp(new THREE.Color(0xffffff), 1 - r);
+
+                colorsAttr.setXYZ(i, mixedColor.r, mixedColor.g, mixedColor.b);
+            }
+            colorsAttr.needsUpdate = true;
+            scene.background.setHex(theme.bg);
+            scene.fog.color.setHex(theme.bg);
+
+            // Puntos de Imagen
+            const imgColorsAttr = imgPoints.geometry.attributes.color;
+            for(let i = 0; i < imageItems.length; i++) {
+                imgColorsAttr.setXYZ(i, theme.starColor.r, theme.starColor.g, theme.starColor.b);
+            }
+            imgColorsAttr.needsUpdate = true;
+
+            // Puntos de Mensaje
+            const msgColorsAttr = msgPoints.geometry.attributes.color;
+            for(let i = 0; i < messageItems.length; i++) {
+                msgColorsAttr.setXYZ(i, theme.msgColor.r, theme.msgColor.g, theme.msgColor.b);
+            }
+            msgColorsAttr.needsUpdate = true;
+        }
+
+        colorBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const colorKey = e.target.getAttribute('data-color');
+                const theme = themes[colorKey];
+                colorBtns.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                updateGalaxyColors(theme);
+            });
+        });
+
+        // --- Animación ---
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const elapsedTime = clock.getElapsedTime();
+
+            const rotSpeed = elapsedTime * 0.05;
+            
+            galaxy.rotation.y = rotSpeed;
+            imgPoints.rotation.y = rotSpeed;
+            msgPoints.rotation.y = rotSpeed;
+
+            // Efecto de "respiración" sutil en tamaño (simulado rotando la textura o escalando el material si fuera posible, aquí rotamos ligeramente Z)
+            imgPoints.rotation.z = Math.sin(elapsedTime) * 0.05; 
+            msgPoints.rotation.z = Math.cos(elapsedTime) * 0.05;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
